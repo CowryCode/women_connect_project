@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Building2, Users, LogOut, Home, ShieldCheck } from "lucide-react";
+import { Building2, Users, LogOut, Home, ShieldCheck, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -68,6 +68,22 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+
+          {/* Temp Users — SUPERADMIN only */}
+          {session?.user?.role === "SUPERADMIN" && (
+            <Link
+              href="/admin/temp-users"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
+                pathname.startsWith("/admin/temp-users")
+                  ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-medium"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              <UserCog className="w-4 h-4" />
+              Temp Users
+            </Link>
+          )}
         </nav>
 
         {/* User info */}

@@ -163,6 +163,12 @@ export default function CreateOrganizationPage() {
             name="website"
             value={form.website}
             onChange={(e) => setForm({ ...form, website: e.target.value })}
+            onBlur={(e) => {
+              const val = e.target.value;
+              if (val && !val.match(/^https?:\/\//)) {
+                setForm({ ...form, website: `https://${val}` });
+              }
+            }}
             placeholder="https://example.org"
             className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none focus:border-purple-400 dark:focus:border-purple-600 transition-colors"
           />

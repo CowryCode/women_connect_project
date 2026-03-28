@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import type { Organization } from "@/types";
+import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
     const { query } = await req.json();
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
+    }
+
+    // Block temp users with no credits
+    if (session?.user?.isTempUser && session.user.id) {
+      const tempUser = await prisma.tempUser.findUnique({
+        where: { id: session.user.id },
+        select: { usageCount: true },
+      });
+      if (!tempUser || tempUser.usageCount <= 0) {
+        if (tempUser) await prisma.tempUser.delete({ where: { id: session.user.id } });
+        return NextResponse.json({ error: "CREDITS_EXHAUSTED" }, { status: 403 });
+      }
     }
 
     // Call backend AI API
@@ -22,8 +38,10 @@ export async function POST(req: Request) {
       //   headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({ query }),
       // });
+      const aiSessionId = session?.user?.id ?? randomUUID();
+      console.log("Session ID:", aiSessionId);
       console.log("Sending query to AI API:", query);
-      const res = await fetch(`${apiUrl}/process/my-session4`, {
+      const res = await fetch(`${apiUrl}/process/${aiSessionId}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -34,7 +52,7 @@ export async function POST(req: Request) {
 
       if (res.ok) {
         const data = await res.json();
-        console.log("AI API response:", data);
+        // console.log("AI API response:", data);
         summary = data.summary || "";
         // const ids: string[] = data.organization_ids || [];
         const ids: string[] = data.ids || [];
@@ -53,7 +71,7 @@ export async function POST(req: Request) {
       });
 
       const keywords = query.toLowerCase().split(" ");
-      matchedOrganizations = organizations.filter((org) =>
+      matchedOrganizations = organizations.filter((org: Organization) =>
         keywords.some(
           (kw: string) =>
             org.name.toLowerCase().includes(kw) ||
@@ -74,6 +92,17 @@ export async function POST(req: Request) {
         results: { summary, count: matchedOrganizations.length },
       },
     });
+
+    // Decrement usageCount for temp users
+    if (session?.user?.isTempUser && session.user.id) {
+      const updated = await prisma.tempUser.update({
+        where: { id: session.user.id },
+        data: { usageCount: { decrement: 1 } },
+      });
+      if (updated.usageCount < 0) {
+        await prisma.tempUser.delete({ where: { id: session.user.id } });
+      }
+    }
 
     return NextResponse.json({
       summary,

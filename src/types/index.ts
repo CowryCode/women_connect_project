@@ -23,3 +23,12 @@ export interface SearchResult {
   summary: string;
   organizations: Organization[];
 }
+
+export interface TempUser {
+  id: string;
+  name?: string | null;
+  email: string;
+  usageCount: number;
+  isActive: boolean;
+  createdAt: Date;
+}

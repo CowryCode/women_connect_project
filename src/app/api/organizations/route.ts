@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 10000); // 10s
+
 export async function GET() {
   try {
     const organizations = await prisma.organization.findMany({
@@ -14,6 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  let organization: any = null;
   try {
     const session = await auth();
     if (!session || !["ADMIN", "SUPERADMIN"].includes(session.user?.role as string)) {
@@ -71,16 +75,28 @@ export async function POST(req: Request) {
         "category": "",
         "doc_id": organization.id
         }),
+        signal: controller.signal
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      console.log("AI API response:", data);
+    clearTimeout(timeout);
+
+    // if (res.ok) {
+    //   const data = await res.json();
+    //   console.log("AI API response:", data);
+    // }
+    if (!res.ok) {
+      // const data = await res.json();
+      // console.log("AI API response:", data);
+      throw new Error(`Embedding API failed with status ${res.status}`);
     }
     
     return NextResponse.json(organization, { status: 201 });
   } catch (error) {
     console.error(error);
+    // Rollback: delete the org from DB if it was created
+    if (organization?.id) {
+      await prisma.organization.delete({ where: { id: organization.id } }).catch(() => {});
+    }
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });
   }
 }

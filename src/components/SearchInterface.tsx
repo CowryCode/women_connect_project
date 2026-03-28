@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { SendHorizontal, Loader2, AlertCircle } from "lucide-react";
+import { SendHorizontal, Loader2, AlertCircle, LogOut } from "lucide-react";
 import { OrganizationCard } from "@/components/OrganizationCard";
 import { Organization } from "@/types";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 interface Message {
   id: string;
@@ -21,7 +21,7 @@ export function SearchInterface() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-   const { data: session } = useSession();
+  const { data: session, update } = useSession();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -60,6 +60,15 @@ export function SearchInterface() {
         body: JSON.stringify({ query }),
       });
 
+      if (res.status === 403) {
+        const data = await res.json();
+        if (data.error === "CREDITS_EXHAUSTED") {
+          setError("Your search credits have been exhausted. You will be logged out.");
+          setTimeout(() => signOut({ callbackUrl: "/login" }), 3000);
+          return;
+        }
+      }
+
       if (!res.ok) throw new Error("Failed to get response");
 
       const data = await res.json();
@@ -71,6 +80,9 @@ export function SearchInterface() {
         organizations: data.organizations,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Refresh session to get updated usageCount for temp users
+      if (session?.user?.isTempUser) await update();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -99,19 +111,31 @@ export function SearchInterface() {
         </div>
         <nav className="flex items-center gap-4">
           {session?.user ? (
-        <a href="/admin/organizations">
-              <span>{session.user.name || session.user.email}</span>
-            </a>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-sm text-gray-700 dark:text-gray-200">{session.user.name || session.user.email}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">
+                  {session.user.isTempUser ? `(Credits: ${session.user.usageCount ?? 0})` : session.user.role}
+                </p>
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           ) : (
             <a href="/login">Admin Login</a>
           )}
 
-          <a
+          {/* <a
             href="/login"
             className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             Admin Login
-          </a>
+          </a> */}
         </nav>
       </header>
 

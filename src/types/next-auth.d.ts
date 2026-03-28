@@ -5,6 +5,8 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
+      isTempUser?: boolean;
+      usageCount?: number; 
     } & DefaultSession["user"];
   }
 }
