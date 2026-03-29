@@ -60,8 +60,8 @@ export async function POST(req: Request) {
     });
 
     // Call backend AI API
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const token = process.env.NEXT_PUBLIC_API_TOKEN;
+    const apiUrl = process.env.API_URL || "http://localhost:8000";
+    const token = process.env.API_TOKEN;
 
    
     const res = await fetch(`${apiUrl}/embeddings/add`, {
