@@ -113,10 +113,12 @@ export function SearchInterface() {
           {session?.user ? (
             <div className="flex items-center gap-3">
               <div className="text-right">
+                <a href="/admin/organizations">
                 <p className="text-sm text-gray-700 dark:text-gray-200">{session.user.name || session.user.email}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">
                   {session.user.isTempUser ? `(Credits: ${session.user.usageCount ?? 0})` : session.user.role}
                 </p>
+                </a> 
               </div>
               <button
                 onClick={() => signOut({ callbackUrl: "/login" })}

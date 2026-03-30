@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 10000); // 10s
-
 export async function GET() {
   try {
     const organizations = await prisma.organization.findMany({
@@ -48,7 +45,7 @@ export async function POST(req: Request) {
       logoUrl = `data:${logoFile.type};base64,${base64}`;
     }
 
-    const organization = await prisma.organization.create({
+    organization = await prisma.organization.create({
       data: {
         name,
         description,
@@ -63,19 +60,21 @@ export async function POST(req: Request) {
     const apiUrl = process.env.API_URL || "http://localhost:8000";
     const token = process.env.API_TOKEN;
 
-   
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    
     const res = await fetch(`${apiUrl}/embeddings/add`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`, 
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
-        "text": organization.description,
-        "category": "",
-        "doc_id": organization.id
-        }),
-        signal: controller.signal
+        text: organization.description,
+        category: "",
+        doc_id: organization.id,
+      }),
+      signal: controller.signal,
     });
 
     clearTimeout(timeout);
