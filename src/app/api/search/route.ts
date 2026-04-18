@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import type { Organization } from "@/types";
 import { randomUUID } from "crypto";
 
 export async function POST(req: Request) {
@@ -38,7 +37,8 @@ export async function POST(req: Request) {
       //   headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({ query }),
       // });
-      const aiSessionId = session?.user?.id ?? randomUUID();
+      // const aiSessionId = session?.user?.id ?? randomUUID();
+      const aiSessionId = 'my-session';
       console.log("Session ID:", aiSessionId);
       console.log("Sending query to AI API:", query);
       const res = await fetch(`${apiUrl}/process/${aiSessionId}`, {
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       });
 
       const keywords = query.toLowerCase().split(" ");
-      matchedOrganizations = organizations.filter((org: Organization) =>
+      matchedOrganizations = organizations.filter((org) =>
         keywords.some(
           (kw: string) =>
             org.name.toLowerCase().includes(kw) ||

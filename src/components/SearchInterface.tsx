@@ -73,6 +73,8 @@ export function SearchInterface() {
 
       const data = await res.json();
 
+      console.log("Search API response:", data);
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",

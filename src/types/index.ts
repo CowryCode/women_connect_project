@@ -7,6 +7,7 @@ export interface Organization {
   phone?: string | null;
   email?: string | null;
   isActive: boolean;
+  clickCount: number | 0;
   createdAt: Date;
 }
 
