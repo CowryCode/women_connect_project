@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Building2, Users, LogOut, Home, ShieldCheck, UserCog } from "lucide-react";
+import { Building2, Users, LogOut, Home, ShieldCheck, UserCog, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin/organizations", label: "Organizations", icon: Building2 },
+  { href: "/admin/tools", label: "Tools", icon: Wrench },
   { href: "/admin/users", label: "Users", icon: Users },
 ];
 

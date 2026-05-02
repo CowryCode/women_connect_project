@@ -57,7 +57,7 @@ export function SearchInterface() {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, isToolsMode }),
       });
 
       if (res.status === 403) {
@@ -79,6 +79,7 @@ export function SearchInterface() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: data.summary,
+        //content: data.organizations.length > 0 ? data.summary : "We understand you are going through a difficult time. Currently, we could not find a direct match, but please reach out to emergency services if you are in immediate danger.",
         organizations: data.organizations,
       };
       setMessages((prev) => [...prev, assistantMessage]);
@@ -99,6 +100,8 @@ export function SearchInterface() {
     }
   };
 
+  const [isToolsMode, setIsToolsMode] = useState(true);
+
   const isEmptyState = messages.length === 0;
 
   return (
@@ -109,7 +112,10 @@ export function SearchInterface() {
           <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
             <span className="text-white text-sm font-bold">G</span>
           </div>
-          <span className="font-semibold text-gray-900 dark:text-white">GBV Connect</span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900 dark:text-white">GBV Connect</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{isToolsMode ? "Tools" : "Org."} Mode</span>
+          </div>
         </div>
         <nav className="flex items-center gap-4">
           {session?.user ? (
@@ -158,8 +164,9 @@ export function SearchInterface() {
                 You are not alone.
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed">
-                Tell us what you are going through and we will connect you with
-                organizations that can help. Your safety and privacy matter.
+                {isToolsMode
+                  ? "Describe your situation and we'll find tools that can help..."
+                  : "Tell us what you are going through and we will connect you with organizations that can help. Your safety and privacy matter."}
               </p>
             </div>
 
@@ -252,30 +259,51 @@ export function SearchInterface() {
       {/* Input Area */}
       <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-end gap-3 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-transparent focus-within:border-purple-400 dark:focus-within:border-purple-600 transition-colors">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                adjustHeight();
-              }}
-              onKeyDown={handleKeyDown}
-              placeholder="Describe your situation and we'll find organizations that can help..."
-              rows={1}
-              className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm leading-relaxed max-h-48"
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!input.trim() || isLoading}
-              className="w-8 h-8 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors flex-shrink-0"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 text-white animate-spin" />
-              ) : (
-                <SendHorizontal className="w-4 h-4 text-white" />
-              )}
-            </button>
+          <div className="flex items-end gap-2">
+            {/* Mode Toggle */}
+            <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-1">
+              <button
+                onClick={() => setIsToolsMode(!isToolsMode)}
+                className={`relative inline-flex items-center gap-1.5 px-3 py-2.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+                  isToolsMode
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "bg-purple-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400"
+                }`}
+              >
+                {isToolsMode ? "Tools Mode" : "Org. Mode"}
+              </button>
+            </div>
+
+            {/* Textarea + Send */}
+            <div className="flex-1 flex items-end gap-3 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-transparent focus-within:border-purple-400 dark:focus-within:border-purple-600 transition-colors">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  adjustHeight();
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  isToolsMode
+                    ? "Describe your situation and we'll find organizations that can help..."
+                    : "Search organizations by name or keyword..."
+                }
+                rows={1}
+                className="flex-1 bg-transparent resize-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm leading-relaxed max-h-48"
+              />
+              <button
+                onClick={handleSubmit}
+                disabled={!input.trim() || isLoading}
+                className="w-8 h-8 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center transition-colors flex-shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                ) : (
+                  <SendHorizontal className="w-4 h-4 text-white" />
+                )}
+              </button>
+            </div>
           </div>
           <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-2">
             Your queries are confidential. We are here to help.

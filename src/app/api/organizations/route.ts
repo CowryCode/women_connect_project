@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { API_URL, API_TOKEN, ORG_CATEGORY } from "@/lib/config";
 
 export async function GET() {
   try {
@@ -57,21 +58,21 @@ export async function POST(req: Request) {
     });
 
     // Call backend AI API
-    const apiUrl = process.env.API_URL || "http://localhost:8000";
-    const token = process.env.API_TOKEN;
+    // const apiUrl = process.env.API_URL || "http://localhost:8000";
+    // const token = process.env.API_TOKEN;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
     
-    const res = await fetch(`${apiUrl}/embeddings/add`, {
+    const res = await fetch(`${API_URL}/embeddings/add/${ORG_CATEGORY}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        "Authorization": `Bearer ${API_TOKEN}`,
       },
       body: JSON.stringify({
         text: organization.description,
-        category: "",
+        category: ORG_CATEGORY,
         doc_id: organization.id,
       }),
       signal: controller.signal,

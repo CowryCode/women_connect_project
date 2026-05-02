@@ -41,6 +41,17 @@ model Organization {
   @@map("organizations")
 }
 
+model Tool {
+  id         String   @id @default(cuid())
+  name       String
+  content    String   @db.Text
+  clickCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("tools")
+}
+
 model SearchLog {
   id        String   @id @default(cuid())
   query     String

@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { randomUUID } from "crypto";
+import { API_URL, API_TOKEN, ORG_CATEGORY, TOOL_CATEGORY} from "@/lib/config";
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
-    const { query } = await req.json();
+    const { query, isToolsMode } = await req.json();
 
     if (!query?.trim()) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
@@ -25,8 +26,8 @@ export async function POST(req: Request) {
     }
 
     // Call backend AI API
-    const apiUrl = process.env.API_URL || "http://localhost:8000";
-    const token = process.env.API_TOKEN;
+    // const apiUrl = process.env.API_URL || "http://localhost:8000";
+    // const token = process.env.API_TOKEN;
 
     let summary = "";
     let matchedOrganizations: any[] = [];
@@ -37,15 +38,18 @@ export async function POST(req: Request) {
       //   headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({ query }),
       // });
-      // const aiSessionId = session?.user?.id ?? randomUUID();
-      const aiSessionId = 'my-session';
-      console.log("Session ID:", aiSessionId);
+      //const aiSessionId = session?.user?.id ?? randomUUID();
+      const category = isToolsMode ? TOOL_CATEGORY : ORG_CATEGORY;
+      const userID = isToolsMode ? TOOL_CATEGORY : ORG_CATEGORY;
+
+      console.log("Mode:", isToolsMode ? "Tools" : "Org");
       console.log("Sending query to AI API:", query);
-      const res = await fetch(`${apiUrl}/process/${aiSessionId}`, {
+      // THE USER AND CATEGORY VARIABLES ARE THE SAME IN THIS APP
+      const res = await fetch(`${API_URL}/process/${category}/${userID}`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, 
+          "Authorization": `Bearer ${API_TOKEN}`,
         },
         body: JSON.stringify({"query": query }),
       });
