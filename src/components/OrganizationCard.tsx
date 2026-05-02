@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { Organization } from "@/types";
 import { Globe, Phone, Mail, ExternalLink, Star } from "lucide-react";
@@ -16,10 +19,22 @@ function getStarCount(clickCount: number): number {
 }
 
 export function OrganizationCard({ organization }: OrganizationCardProps) {
-  const starCount = getStarCount(organization.clickCount);
+  const [clickCount, setClickCount] = useState(organization.clickCount);
+  const starCount = getStarCount(clickCount);
+
+  const handleClick = () => {
+    setClickCount((prev) => prev + 1);
+    fetch(`/api/organizations/${organization.id}/click`, { method: "POST" }).catch(() => {});
+    if (organization.website) {
+      window.open(organization.website, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 flex flex-col gap-4">
+    <div
+      onClick={handleClick}
+      className="cursor-pointer bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 flex flex-col gap-4"
+    >
       {/* Logo & Name */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -54,6 +69,7 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
         {organization.phone && (
           <a
             href={`tel:${organization.phone}`}
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
           >
             <Phone className="w-3.5 h-3.5 flex-shrink-0" />
@@ -63,6 +79,7 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
         {organization.email && (
           <a
             href={`mailto:${organization.email}`}
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
           >
             <Mail className="w-3.5 h-3.5 flex-shrink-0" />
@@ -70,32 +87,38 @@ export function OrganizationCard({ organization }: OrganizationCardProps) {
           </a>
         )}
         {organization.website && (
-          <a
-            href={organization.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:underline transition-colors"
-          >
+          <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:underline transition-colors">
             <Globe className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">Visit Website</span>
             <ExternalLink className="w-3 h-3 flex-shrink-0" />
-          </a>
+          </div>
+          // <a
+          //   href={organization.website}
+          //   target="_blank"
+          //   rel="noopener noreferrer"
+          //   onClick={(e) => e.stopPropagation()}
+          //   className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:underline transition-colors"
+          // >
+          //   <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+          //   <span className="truncate">Visit Website</span>
+          //   <ExternalLink className="w-3 h-3 flex-shrink-0" />
+          // </a>
         )}
         <div className="flex items-center gap-1">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3.5 h-3.5 ${
-                  i < starCount
-                    ? "text-yellow-400 fill-yellow-400"
-                    : "text-gray-300 dark:text-gray-600"
-                }`}
-              />
-            ))}
-            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
-              ({organization.clickCount})
-            </span>
-          </div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              className={`w-3.5 h-3.5 ${
+                i < starCount
+                  ? "text-yellow-400 fill-yellow-400"
+                  : "text-gray-300 dark:text-gray-600"
+              }`}
+            />
+          ))}
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+            ({clickCount})
+          </span>
+        </div>
       </div>
     </div>
   );

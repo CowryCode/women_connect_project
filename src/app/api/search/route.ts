@@ -43,7 +43,8 @@ export async function POST(req: Request) {
       const userID = isToolsMode ? TOOL_CATEGORY : ORG_CATEGORY;
 
       console.log("Mode:", isToolsMode ? "Tools" : "Org");
-      console.log("Sending query to AI API:", query);
+      console.log("Category:", category);
+      console.log("Query:", query);
       // THE USER AND CATEGORY VARIABLES ARE THE SAME IN THIS APP
       const res = await fetch(`${API_URL}/process/${category}/${userID}`, {
         method: "POST",
